@@ -131,11 +131,14 @@ const Rightmenu = ({ open = false, onClose = () => {} }) => {
           {main.map(renderItem)}
           <div className="rightmenudivider" />
           {bottom.map(renderItem)}
+        </nav>
+
+        <div className="rightmenufooter">
           <button type="button" className="rightmenuitem" onClick={handleLogout}>
             <LuLogOut className="rightmenuitemicon" />
             <span className="rightmenuitemlabel">خروج از حساب</span>
           </button>
-        </nav>
+        </div>
 
         <svg className="rightmenudecor" viewBox="0 0 200 140" aria-hidden="true" preserveAspectRatio="xMaxYMax meet">
           <path d="M200 0C150 20 90 70 40 140H200Z" fill="var(--primary)" />

@@ -1,15 +1,25 @@
 import React, { useMemo, useState } from "react";
-import { LuSearch, LuMapPin, LuPhone, LuClock, LuCircleCheck, LuCircleX } from "react-icons/lu";
+import { Link } from "react-router-dom";
+import { LuClipboardList, LuHourglass, LuTriangleAlert, LuCircleCheck } from "react-icons/lu";
+import PageHeader from "../component/ui/PageHeader";
+import StatStrip from "../component/ui/StatStrip";
+import SearchBox from "../component/ui/SearchBox";
+import FilterTabs from "../component/ui/FilterTabs";
+import Person from "../component/ui/Person";
 import Badge from "../component/table/Badge";
 import DataTable from "../component/table/DataTable";
-import { MOCK_MISSIONS } from "../services/mockData";
-import { tofa } from "../utils/format";
+import { MISSION_STAGES, MOCK_MISSIONS, PRIORITY } from "../services/mockData";
+import { norm, toFaDigits, tofa } from "../utils/format";
 
-const STATUS = {
-  pending: { label: "جستجوی نصاب", tone: "gold" },
-  accepted: { label: "پذیرفته‌شده", tone: "success" },
-  rejected: { label: "رد‌شده", tone: "danger" },
-  done: { label: "تمام‌شده", tone: "slate" },
+const STAGE_TONE = {
+  registered: "info", review: "gold", assigned: "info", inprogress: "gold", finished: "success", closed: "slate",
+};
+const stageLabel = (k) => MISSION_STAGES.find((s) => s.key === k)?.label ?? k;
+
+const FILTERS = {
+  active: (m) => m.stage !== "closed" && m.status !== "rejected" || m.stage === "review",
+  done: (m) => m.stage === "closed",
+  rejected: (m) => m.status === "rejected",
 };
 
 const MissionsList = () => {
@@ -17,88 +27,80 @@ const MissionsList = () => {
   const [tab, setTab] = useState("active");
 
   const rows = useMemo(() => {
-    let list = MOCK_MISSIONS;
-    if (tab === "active") list = list.filter((m) => m.status === "pending" || m.status === "accepted");
-    if (tab === "done") list = list.filter((m) => m.status === "done");
-    if (tab === "rejected") list = list.filter((m) => m.status === "rejected");
-    const q = query.trim();
-    if (q) {
-      list = list.filter(
-        (m) => m.customer.includes(q) || m.service.includes(q) || m.city.includes(q),
-      );
-    }
-    return list;
+    const q = norm(query.trim());
+    return MOCK_MISSIONS.filter(FILTERS[tab]).filter(
+      (m) =>
+        !q ||
+        norm(m.customer).includes(q) ||
+        norm(m.service).includes(q) ||
+        norm(m.tracking).includes(q) ||
+        norm(m.city).includes(q),
+    );
   }, [query, tab]);
 
+  const count = (k) => MOCK_MISSIONS.filter(FILTERS[k]).length;
+  const urgent = MOCK_MISSIONS.filter((m) => m.priority === "urgent" && m.stage !== "closed").length;
+
   const columns = [
-    { key: "id", header: "#", render: (r) => <span dir="ltr">#{r.id}</span> },
-    { key: "customer", header: "مشتری", render: (r) => <strong>{r.customer}</strong> },
-    { key: "service", header: "خدمت" },
     {
-      key: "address",
-      header: "آدرس",
+      key: "tracking",
+      header: "شماره پیگیری",
       render: (r) => (
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <LuMapPin /> {r.city} - {r.address}
-        </span>
+        <Link to={`/missions/${r.id}`} className="textlink" dir="ltr">
+          {toFaDigits(r.tracking)}
+        </Link>
       ),
     },
-    { key: "price", header: "هزینه", render: (r) => tofa(r.price) + " تومان" },
+    { key: "customer", header: "مشتری", render: (r) => <Person name={r.customer} sub={r.service} /> },
+    { key: "city", header: "شهر" },
     {
-      key: "status",
-      header: "وضعیت",
-      render: (r) => <Badge tone={STATUS[r.status].tone}>{STATUS[r.status].label}</Badge>,
+      key: "priority",
+      header: "اولویت",
+      render: (r) => <Badge tone={PRIORITY[r.priority].tone}>{PRIORITY[r.priority].label}</Badge>,
     },
     {
-      key: "installer",
-      header: "نصاب",
-      render: (r) => (r.installer ? r.installer : "—"),
+      key: "stage",
+      header: "مرحله",
+      render: (r) => <Badge tone={STAGE_TONE[r.stage]}>{stageLabel(r.stage)}</Badge>,
     },
-    {
-      key: "createdAt",
-      header: "زمان ثبت",
-      render: (r) => <span dir="ltr">{r.createdAt}</span>,
-    },
+    { key: "installer", header: "تکنسین", render: (r) => r.installer || <span className="muted">تخصیص نیافته</span> },
+    { key: "createdAt", header: "زمان ثبت", render: (r) => <span dir="ltr">{toFaDigits(r.createdAt)}</span> },
   ];
 
   return (
     <div className="modulepage">
-      <div className="pagehead">
-        <h1 className="pagetitle"><span>درخواست‌های تعمیر</span></h1>
-      </div>
+      <PageHeader
+        title="فهرست درخواست‌ها"
+        subtitle="هر درخواست شماره پیگیری، اولویت و وضعیت چندمرحله‌ای دارد؛ برای دیدن جزئیات روی شماره بزنید"
+      />
+
+      <StatStrip
+        items={[
+          { label: "همه‌ی درخواست‌ها", value: MOCK_MISSIONS.length, icon: LuClipboardList, tone: "gold" },
+          { label: "منتظر تکنسین", value: MOCK_MISSIONS.filter((m) => m.status === "pending").length, icon: LuHourglass, tone: "info" },
+          { label: "فوری و باز", value: urgent, icon: LuTriangleAlert, tone: "danger" },
+          { label: "بسته‌شده", value: count("done"), icon: LuCircleCheck, tone: "success" },
+        ]}
+      />
 
       <div className="toolbar">
-        <div className="tabbar">
-          {[
-            ["active", "فعال"],
-            ["done", "تمام‌شده"],
-            ["rejected", "رد‌شده"],
-          ].map(([k, label]) => (
-            <button
-              key={k}
-              type="button"
-              className={`tab ${tab === k ? "tabactive" : ""}`}
-              onClick={() => setTab(k)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <label className="fieldbox" style={{ height: 46, flex: "0 1 320px", marginInlineStart: "auto" }}>
-          <LuSearch className="fieldicon" />
-          <input
-            type="search"
-            placeholder="جستجوی مشتری، خدمت یا شهر..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </label>
+        <FilterTabs
+          value={tab}
+          onChange={setTab}
+          options={[
+            ["active", "باز", count("active")],
+            ["done", "بسته‌شده", count("done")],
+            ["rejected", "ردشده توسط تکنسین", count("rejected")],
+          ]}
+        />
+        <SearchBox value={query} onChange={setQuery} placeholder="جستجوی شماره پیگیری، مشتری یا خدمت..." />
       </div>
 
       <DataTable
         columns={columns}
         rows={rows}
         empty="درخواستی در این دسته وجود ندارد."
+        footer={`${tofa(rows.length)} درخواست`}
       />
     </div>
   );

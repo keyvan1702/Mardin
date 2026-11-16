@@ -1,9 +1,16 @@
 import React, { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { LuPlus, LuPencil, LuTrash2, LuSearch } from "react-icons/lu";
+import { LuUsers, LuUserCheck, LuUserMinus, LuUserX } from "react-icons/lu";
+import PageHeader from "../component/ui/PageHeader";
+import StatStrip from "../component/ui/StatStrip";
+import SearchBox from "../component/ui/SearchBox";
+import FilterTabs from "../component/ui/FilterTabs";
+import Person from "../component/ui/Person";
+import RowActions from "../component/ui/RowActions";
+import AddAction from "../component/ui/AddAction";
 import DataTable from "../component/table/DataTable";
 import Badge from "../component/table/Badge";
 import { MOCK_CUSTOMERS } from "../services/mockData";
+import { norm, toFaDigits, tofa } from "../utils/format";
 
 const STATUS = {
   active: { label: "فعال", tone: "success" },
@@ -11,73 +18,77 @@ const STATUS = {
   blocked: { label: "مسدود", tone: "danger" },
 };
 
+const count = (s) => MOCK_CUSTOMERS.filter((c) => c.status === s).length;
+
 const CustomersList = () => {
   const [query, setQuery] = useState("");
+  const [tab, setTab] = useState("all");
 
   const rows = useMemo(() => {
-    const q = query.trim();
-    if (!q) return MOCK_CUSTOMERS;
+    const q = norm(query.trim());
     return MOCK_CUSTOMERS.filter(
-      (c) => c.name.includes(q) || c.phone.includes(q) || c.city.includes(q),
+      (c) =>
+        (tab === "all" || c.status === tab) &&
+        (!q || norm(c.name).includes(q) || norm(c.phone).includes(q) || norm(c.city).includes(q)),
     );
-  }, [query]);
+  }, [query, tab]);
 
   const columns = [
-    { key: "name", header: "نام مشتری", render: (r) => <strong>{r.name}</strong> },
-    { key: "phone", header: "تلفن", render: (r) => <span dir="ltr">{r.phone}</span> },
+    {
+      key: "name",
+      header: "مشتری",
+      render: (r) => <Person name={r.name} sub={toFaDigits(r.phone)} subLtr />,
+    },
     { key: "city", header: "شهر" },
     {
       key: "status",
       header: "وضعیت",
       render: (r) => <Badge tone={STATUS[r.status].tone}>{STATUS[r.status].label}</Badge>,
     },
-    { key: "joinedAt", header: "تاریخ عضویت", render: (r) => <span dir="ltr">{r.joinedAt}</span> },
     {
-      key: "actions",
-      header: "عملیات",
-      render: () => (
-        <div className="table-actions">
-          <button type="button" className="btnicon" aria-label="ویرایش">
-            <LuPencil />
-          </button>
-          <button type="button" className="btnicon btnicon-danger" aria-label="حذف">
-            <LuTrash2 />
-          </button>
-        </div>
-      ),
+      key: "joinedAt",
+      header: "تاریخ عضویت",
+      render: (r) => <span dir="ltr">{toFaDigits(r.joinedAt)}</span>,
     },
+    { key: "actions", header: "", className: "colactions", render: (r) => <RowActions module="customers" label={r.name} /> },
   ];
 
   return (
     <div className="modulepage">
-      <div className="pagehead">
-        <h1 className="pagetitle">
-          <span>مدیریت مشتریان</span>
-        </h1>
-        <Link to="/customers/new" className="btnprimary">
-          <LuPlus /> افزودن مشتری
-        </Link>
-      </div>
+      <PageHeader
+        title="مدیریت مشتریان"
+        subtitle="مشتریان ثبت‌شده، وضعیت و اطلاعات تماس آن‌ها"
+        actions={<AddAction module="customers" to="/customers/new">افزودن مشتری</AddAction>}
+      />
+
+      <StatStrip
+        items={[
+          { label: "همه‌ی مشتریان", value: MOCK_CUSTOMERS.length, icon: LuUsers, tone: "gold" },
+          { label: "فعال", value: count("active"), icon: LuUserCheck, tone: "success" },
+          { label: "غیرفعال", value: count("inactive"), icon: LuUserMinus, tone: "slate" },
+          { label: "مسدود", value: count("blocked"), icon: LuUserX, tone: "danger" },
+        ]}
+      />
 
       <div className="toolbar">
-        <label className="fieldbox" style={{ height: 46, flex: "0 1 320px" }}>
-          <LuSearch className="fieldicon" />
-          <input
-            type="search"
-            placeholder="جستجو بر اساس نام، تلفن یا شهر..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </label>
-        <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
-          {rows.length} مشتری
-        </span>
+        <FilterTabs
+          value={tab}
+          onChange={setTab}
+          options={[
+            ["all", "همه"],
+            ["active", "فعال"],
+            ["inactive", "غیرفعال"],
+            ["blocked", "مسدود"],
+          ]}
+        />
+        <SearchBox value={query} onChange={setQuery} placeholder="جستجوی نام، تلفن یا شهر..." />
       </div>
 
       <DataTable
         columns={columns}
         rows={rows}
         empty="مشتری‌ای با این مشخصات پیدا نشد."
+        footer={`${tofa(rows.length)} مشتری`}
       />
     </div>
   );

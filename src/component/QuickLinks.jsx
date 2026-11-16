@@ -1,14 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { LuArrowLeft } from "react-icons/lu";
-import { MENU_ITEMS, firstPath } from "../utils/menu";
-import { can } from "../utils/permissions";
+import { firstPath, visibleMenu } from "../utils/menu";
 import usePermissions from "../hooks/usePermissions";
 
-// ردیف کارت‌های میان‌بر پایین داشبورد
+// کاشی‌های میان‌بر پایین داشبورد؛ فقط بخش‌هایی که نقش کاربر به آن‌ها دسترسی دارد
 const QuickLinks = () => {
   const { role } = usePermissions();
-  const items = MENU_ITEMS.filter((i) => i.quick && (!i.perm || can(role, i.perm)));
+  const items = visibleMenu(role).filter((i) => i.quick);
 
   return (
     <section className="quicklinks" aria-label="دسترسی سریع">

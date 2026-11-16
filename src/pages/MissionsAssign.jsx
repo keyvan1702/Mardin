@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { LuUserRound, LuCircleCheck, LuCircleX, LuMapPin, LuPhone, LuSend } from "react-icons/lu";
 import Badge from "../component/table/Badge";
 import { MOCK_MISSIONS, MOCK_INSTALLERS } from "../services/mockData";
-import { tofa } from "../utils/format";
+import PageHeader from "../component/ui/PageHeader";
+import { tofa, toFaDigits } from "../utils/format";
 
 const MissionsAssign = () => {
   const pending = MOCK_MISSIONS.filter((m) => m.status === "pending");
@@ -13,7 +14,7 @@ const MissionsAssign = () => {
 
   return (
     <div className="modulepage">
-      <h1 className="pagetitle"><span>تخصیص ماموریت به نصاب</span></h1>
+      <PageHeader title="تخصیص ماموریت به نصاب" subtitle="برای هر درخواست، نصاب مناسب را انتخاب کنید" />
 
       <div className="splitgrid">
         {/* لیست درخواست‌های در انتظار */}
@@ -55,7 +56,7 @@ const MissionsAssign = () => {
                 <div>
                   <h2 className="sectiontitle">{mission.service}</h2>
                   <p className="muted">
-                    مشتری: {mission.customer} · <span dir="ltr">{mission.customerPhone}</span>
+                    مشتری: {mission.customer} · <span dir="ltr">{toFaDigits(mission.customerPhone)}</span>
                   </p>
                   <p className="muted">{mission.city} - {mission.address}</p>
                   <p>{mission.description}</p>
@@ -95,7 +96,7 @@ const MissionsAssign = () => {
                         </Badge>
                       </span>
                     </div>
-                    <span className="installerphone" dir="ltr">{ins.phone}</span>
+                    <span className="installerphone" dir="ltr">{toFaDigits(ins.phone)}</span>
                   </label>
                 ))}
               </div>

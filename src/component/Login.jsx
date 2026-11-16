@@ -64,11 +64,22 @@ const Login = () => {
 
   return (
     <main className="loginpage">
+      <aside className="loginaside">
+        <div className="loginasidebrand">
+          <Logo size={44} />
+          <span>ماردین</span>
+        </div>
+        <div className="loginasidetext">
+          <h2>درخواست‌ها، نصاب‌ها و ورکشاپ‌ها در یک پنل</h2>
+          <p>وارد شوید و کارهای امروز را ببینید.</p>
+        </div>
+      </aside>
+
+      <div className="loginpanel">
       <form className="logincard" onSubmit={onSubmit} noValidate>
         <div className="loginbrand">
-          <Logo size={52} />
-          <h1 className="logintitle">ورود به ماردین</h1>
-          <p className="loginsub">برای ادامه وارد پنل مدیریت شوید.</p>
+          <h1 className="logintitle">ورود به پنل</h1>
+          <p className="loginsub">نام کاربری و رمز عبور خود را وارد کنید.</p>
         </div>
 
         <label className="field">
@@ -129,10 +140,12 @@ const Login = () => {
 
         {import.meta.env.DEV && (
           <p className="loginhint">
-            نسخه‌ی نمایشی: <code>admin</code> / <code>1234</code>
+            نسخه‌ی نمایشی (رمز همه <code>1234</code>): <code>admin</code> مدیر، <code>operator</code> اپراتور،
+            <code>accountant</code> حسابدار، <code>tech</code> تکنسین
           </p>
         )}
       </form>
+      </div>
     </main>
   );
 };

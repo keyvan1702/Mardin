@@ -1,21 +1,30 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
-  LuSearch,
-  LuBell,
-  LuChevronDown,
-  LuMenu,
-  LuSun,
-  LuMoon,
-  LuSettings,
-  LuLogOut,
+  LuSearch, LuBell, LuChevronDown, LuMenu, LuSun, LuMoon, LuSettings, LuLogOut,
 } from "react-icons/lu";
 import { getStoredUser, clearUser } from "./Login";
 import { useTheme } from "./ThemeContext";
 import { useToast } from "./ToastContext";
-import { MENU_ITEMS } from "../utils/menu";
-import { ROLE_LABELS, can, normalizeRole } from "../utils/permissions";
-import { initials } from "../utils/format";
+import { MENU_LEAVES } from "../utils/menu";
+import { ROLE_LABELS, canAccess, normalizeRole } from "../utils/permissions";
+import { initials, norm, tofa } from "../utils/format";
+import { MOCK_INBOX } from "../services/mockData";
+
+// بستن یک پنجره‌ی بازشو با کلیک بیرون یا Esc
+function useDismiss(open, setOpen, ref) {
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => !ref.current?.contains(e.target) && setOpen(false);
+    const onEsc = (e) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, [open, setOpen, ref]);
+}
 
 const Topbar = ({ onMenuClick }) => {
   const navigate = useNavigate();
@@ -26,36 +35,24 @@ const Topbar = ({ onMenuClick }) => {
 
   const [query, setQuery] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
+  const [bellOpen, setBellOpen] = useState(false);
+  const [inbox, setInbox] = useState(MOCK_INBOX); // اعلان‌های داخلی (فعلاً استاتیک)
   const profileRef = useRef(null);
+  const bellRef = useRef(null);
 
-  // بستن منوی پروفایل با کلیک بیرون یا Esc
-  useEffect(() => {
-    if (!profileOpen) return;
-    const onDown = (e) => {
-      if (!profileRef.current?.contains(e.target)) setProfileOpen(false);
-    };
-    const onEsc = (e) => e.key === "Escape" && setProfileOpen(false);
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onEsc);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onEsc);
-    };
-  }, [profileOpen]);
+  useDismiss(profileOpen, setProfileOpen, profileRef);
+  useDismiss(bellOpen, setBellOpen, bellRef);
+
+  const unread = inbox.filter((n) => n.unread).length;
 
   // جستجو در نام بخش‌ها و زیرمنوها: با Enter به اولین بخش مطابق می‌رود
   const onSearch = (e) => {
     e.preventDefault();
-    const q = query.trim();
+    const q = norm(query.trim());
     if (!q) return;
-
-    const flat = MENU_ITEMS.flatMap((i) =>
-      i.children?.length
-        ? i.children.map((c) => ({ ...c, perm: c.perm || i.perm }))
-        : [i],
+    const hit = MENU_LEAVES.find(
+      (i) => (norm(i.label).includes(q) || norm(i.parent?.label || "").includes(q)) && canAccess(role, i.module),
     );
-    const hit = flat.find((i) => i.label.includes(q) && (!i.perm || can(role, i.perm)));
-
     if (hit) {
       navigate(hit.path);
       setQuery("");
@@ -72,12 +69,7 @@ const Topbar = ({ onMenuClick }) => {
 
   return (
     <header className="topbar">
-      <button
-        type="button"
-        className="topbarmenubtn"
-        onClick={onMenuClick}
-        aria-label="باز کردن منو"
-      >
+      <button type="button" className="topbarmenubtn" onClick={onMenuClick} aria-label="باز کردن منو">
         <LuMenu />
       </button>
 
@@ -101,10 +93,47 @@ const Topbar = ({ onMenuClick }) => {
           {theme === "dark" ? <LuSun /> : <LuMoon />}
         </button>
 
-        <button type="button" className="iconbtn iconbtnbell" aria-label="اعلان‌ها">
-          <LuBell />
-          <span className="belldot" />
-        </button>
+        <div className="bellwrap" ref={bellRef}>
+          <button
+            type="button"
+            className="iconbtn"
+            onClick={() => setBellOpen((v) => !v)}
+            aria-label={unread ? `اعلان‌ها (${unread} خوانده‌نشده)` : "اعلان‌ها"}
+            aria-expanded={bellOpen}
+          >
+            <LuBell />
+            {unread > 0 && <span className="belldot" />}
+          </button>
+
+          {bellOpen && (
+            <div className="popover" role="dialog" aria-label="اعلان‌های داخلی">
+              <header className="popoverhead">
+                <strong>اعلان‌ها</strong>
+                {unread > 0 && (
+                  <button type="button" className="textlink" onClick={() => setInbox((l) => l.map((n) => ({ ...n, unread: false })))}>
+                    همه را خوانده‌شده کن
+                  </button>
+                )}
+              </header>
+              <ul className="notifylist">
+                {inbox.map((n) => (
+                  <li key={n.id}>
+                    <Link
+                      to={n.to}
+                      className={`notifyitem ${n.unread ? "notifyitem-unread" : ""}`}
+                      onClick={() => setBellOpen(false)}
+                    >
+                      <strong>{n.title}</strong>
+                      <span>{n.text}</span>
+                      <em>{n.at}</em>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              {unread > 0 && <p className="popoverfoot">{tofa(unread)} اعلان خوانده‌نشده</p>}
+            </div>
+          )}
+        </div>
 
         <span className="topbarsep" />
 
@@ -126,18 +155,16 @@ const Topbar = ({ onMenuClick }) => {
 
           {profileOpen && (
             <div className="profilemenu" role="menu">
-              {can(role, "write") && (
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setProfileOpen(false);
-                    navigate("/settings");
-                  }}
-                >
-                  <LuSettings /> تنظیمات
-                </button>
-              )}
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setProfileOpen(false);
+                  navigate("/settings/profile");
+                }}
+              >
+                <LuSettings /> پروفایل من
+              </button>
               <button type="button" role="menuitem" onClick={logout}>
                 <LuLogOut /> خروج از حساب
               </button>

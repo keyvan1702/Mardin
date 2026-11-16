@@ -4,20 +4,8 @@ import { LuLogOut, LuChevronDown } from "react-icons/lu";
 import Logo from "./Logo";
 import { getStoredUser, clearUser } from "./Login";
 import { useToast } from "./ToastContext";
-import { MENU_ITEMS } from "../utils/menu";
-import { can, normalizeRole } from "../utils/permissions";
-
-// فیلتر آیتم‌ها بر اساس دسترسی؛ اگر همه‌ی زیرمنوها مخفی شوند، خود آیتم هم حذف می‌شود
-function filterByPerm(items, role) {
-  return items
-    .map((item) => {
-      if (item.perm && !can(role, item.perm)) return null;
-      if (!item.children) return item;
-      const children = item.children.filter((c) => !c.perm || can(role, c.perm));
-      return children.length ? { ...item, children } : null;
-    })
-    .filter(Boolean);
-}
+import { visibleMenu } from "../utils/menu";
+import { normalizeRole } from "../utils/permissions";
 
 const Rightmenu = ({ open = false, onClose = () => {} }) => {
   const toast = useToast();
@@ -25,7 +13,8 @@ const Rightmenu = ({ open = false, onClose = () => {} }) => {
   const location = useLocation();
   const role = normalizeRole(getStoredUser()?.role);
 
-  const visible = filterByPerm(MENU_ITEMS, role);
+  // منوی قابل‌نمایش بر اساس «بخش» و نقش (utils/permissions.js)
+  const visible = visibleMenu(role);
   const main = visible.filter((i) => !i.bottom);
   const bottom = visible.filter((i) => i.bottom);
 

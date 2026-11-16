@@ -13,7 +13,7 @@ const M = { top: 20, right: 28, bottom: 40, left: 56 };
 
 // گام «زیبا» برای خطوط افقی
 const niceStep = (v) =>
-  [50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000].find((s) => s >= v) ||
+  [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000].find((s) => s >= v) ||
   Math.ceil(v / 10000) * 10000;
 
 // منحنی نرم (Catmull-Rom به Bézier)
@@ -98,7 +98,7 @@ const SiteStatsChart = ({ data, range, onRangeChange, loading }) => {
   const hp = geo && hover != null ? geo.pts[hover] : null;
 
   return (
-    <section className="chartcard" aria-label="آمار کلی سایت">
+    <section className="chartcard" aria-label="روند درخواست‌ها">
       <header className="chartcardhead">
         <h2 className="chartcardtitle">
           <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
@@ -106,7 +106,7 @@ const SiteStatsChart = ({ data, range, onRangeChange, loading }) => {
             <rect x="8.75" y="6" width="4.5" height="14" rx="1.2" fill="var(--primary)" />
             <rect x="15.5" y="2" width="4.5" height="18" rx="1.2" fill="var(--primary)" />
           </svg>
-          آمار کلی سایت
+          روند درخواست‌ها
         </h2>
 
         <label className="rangeselect">
@@ -211,7 +211,7 @@ const SiteStatsChart = ({ data, range, onRangeChange, loading }) => {
                 }}
               >
                 <strong>{tofa(hp.value)}</strong>
-                <span>بازدید، {fmtDayMonth(hp.date)}</span>
+                <span>درخواست، {fmtDayMonth(hp.date)}</span>
               </div>
             )}
           </>

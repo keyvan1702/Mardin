@@ -21,3 +21,44 @@ export const initials = (name = "") =>
     .slice(0, 2)
     .map((w) => w[0])
     .join("");
+
+
+/* ───────── ارقام فارسی، تاریخ امروز، جستجو ───────── */
+
+const FA_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
+
+// فقط ارقام لاتین را فارسی می‌کند (برای تلفن، تاریخ‌های متنی و شناسه‌ها)
+export const toFaDigits = (v) => String(v ?? "").replace(/[0-9]/g, (d) => FA_DIGITS[d]);
+
+export const toLatinDigits = (v) =>
+  String(v ?? "")
+    .replace(/[۰-۹]/g, (d) => FA_DIGITS.indexOf(d))
+    .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+
+// یکسان‌سازی متن برای جستجو (ی/ک عربی، ارقام فارسی، حروف)
+export const norm = (v) =>
+  toLatinDigits(v).replace(/ي/g, "ی").replace(/ك/g, "ک").toLowerCase();
+
+const todayFormat = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+// مثلاً «یکشنبه ۲۳ آبان ۱۴۰۵»
+export const todayFa = () => todayFormat.format(new Date());
+
+// «۲۳ آبان ۱۴۰۵» از تاریخ ISO (yyyy-mm-dd)
+const fullDate = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+
+export const fmtDate = (isoDate) => {
+  if (!isoDate) return "—";
+  const s = String(isoDate);
+  const d = new Date(s.length === 10 ? `${s}T12:00:00` : s);
+  return Number.isNaN(d.getTime()) ? s : fullDate.format(d);
+};

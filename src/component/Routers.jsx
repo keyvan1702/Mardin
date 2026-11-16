@@ -15,7 +15,9 @@ import CustomersList from "../pages/CustomersList";
 import CustomerForm from "../pages/CustomerForm";
 import StaffList from "../pages/StaffList";
 import StaffInstallers from "../pages/StaffInstallers";
+import RolesAccess from "../pages/RolesAccess";
 import MissionsList from "../pages/MissionsList";
+import MissionDetail from "../pages/MissionDetail";
 import MissionsAssign from "../pages/MissionsAssign";
 import MissionsHistory from "../pages/MissionsHistory";
 import WorkshopsList from "../pages/WorkshopsList";
@@ -23,15 +25,25 @@ import WorkshopsRegistrations from "../pages/WorkshopsRegistrations";
 import ResumesList from "../pages/ResumesList";
 import ProductsList from "../pages/ProductsList";
 import ProductsCategories from "../pages/ProductsCategories";
-import SiteSlider from "../pages/SiteSlider";
-import SiteNews from "../pages/SiteNews";
+import QrList from "../pages/QrList";
+import QrDetail from "../pages/QrDetail";
+import WarrantiesList from "../pages/WarrantiesList";
 import ServicesList from "../pages/ServicesList";
+import PagesList from "../pages/PagesList";
+import ArticlesList from "../pages/ArticlesList";
+import SiteNews from "../pages/SiteNews";
+import SiteSlider from "../pages/SiteSlider";
+import ContentForm from "../pages/ContentForm";
+import InvoicesList from "../pages/InvoicesList";
+import InvoiceForm from "../pages/InvoiceForm";
+import ReportTechnicians from "../pages/ReportTechnicians";
+import ReportFaults from "../pages/ReportFaults";
+import ActivityLog from "../pages/ActivityLog";
 import SettingsGeneral from "../pages/SettingsGeneral";
-import SettingsAccess from "../pages/SettingsAccess";
+import NotificationsSettings from "../pages/NotificationsSettings";
 import SettingsProfile from "../pages/SettingsProfile";
 
 import usePermissions from "../hooks/usePermissions";
-import { can } from "../utils/permissions";
 import { MENU_ITEMS, firstPath } from "../utils/menu";
 
 function hasValidSession() {
@@ -54,9 +66,11 @@ function PublicOnly({ children }) {
   return children;
 }
 
-function RequirePermission({ permission, children }) {
-  const { role } = usePermissions();
-  if (permission && !can(role, permission)) return <Navigate to="/" replace />;
+// دسترسی بر اساس «بخش» و نقش (utils/permissions.js)؛ edit: نیاز به دسترسی کامل
+function RequireModule({ module, edit: needsEdit, children }) {
+  const { access, edit } = usePermissions();
+  if (module && !access(module)) return <Navigate to="/" replace />;
+  if (module && needsEdit && !edit(module)) return <Navigate to="/" replace />;
   return children;
 }
 
@@ -75,41 +89,58 @@ function DashboardRoute() {
   );
 }
 
-// صفحه‌های واقعی استاتیک
+// صفحه‌های واقعی؛ module = بخش دسترسی، edit = فقط با دسترسی «کامل»
 const STATIC_ROUTES = [
   // مشتریان
-  { path: "customers", element: <CustomersList />, perm: "manageUsers" },
-  { path: "customers/new", element: <CustomerForm />, perm: "manageUsers" },
+  { path: "customers", element: <CustomersList />, module: "customers" },
+  { path: "customers/new", element: <CustomerForm />, module: "customers", edit: true },
 
-  // کارکنان
-  { path: "staff", element: <StaffList />, perm: "manageUsers" },
-  { path: "staff/installers", element: <StaffInstallers />, perm: "manageUsers" },
+  // کارکنان و نصابان
+  { path: "staff", element: <StaffList />, module: "staff" },
+  { path: "staff/installers", element: <StaffInstallers />, module: "installers" },
+  { path: "staff/roles", element: <RolesAccess />, module: "roles" },
 
-  // ماموریت‌ها
-  { path: "missions", element: <MissionsList /> },
-  { path: "missions/assign", element: <MissionsAssign /> },
-  { path: "missions/history", element: <MissionsHistory /> },
+  // درخواست‌های خدمات (تیکت)
+  { path: "missions", element: <MissionsList />, module: "missions" },
+  { path: "missions/assign", element: <MissionsAssign />, module: "missions", edit: true },
+  { path: "missions/history", element: <MissionsHistory />, module: "missions" },
+  { path: "missions/:id", element: <MissionDetail />, module: "missions" },
 
-  // ثبت‌نام‌ها
-  { path: "registrations/workshops", element: <WorkshopsList /> },
-  { path: "registrations/workshops/registrations", element: <WorkshopsRegistrations /> },
-  { path: "registrations/resumes", element: <ResumesList /> },
-
-  // محصولات
-  { path: "products", element: <ProductsList /> },
-  { path: "products/categories", element: <ProductsCategories /> },
-
-  // بخش عمومی سایت
-  { path: "site-content/slider", element: <SiteSlider /> },
-  { path: "site-content/news", element: <SiteNews /> },
+  // محصولات، QR و گارانتی
+  { path: "products", element: <ProductsList />, module: "products" },
+  { path: "products/categories", element: <ProductsCategories />, module: "products" },
+  { path: "products/qr", element: <QrList />, module: "qr" },
+  { path: "products/qr/:id", element: <QrDetail />, module: "qr" },
+  { path: "products/warranties", element: <WarrantiesList />, module: "warranty" },
 
   // خدمات
-  { path: "services", element: <ServicesList /> },
+  { path: "services", element: <ServicesList />, module: "services" },
+
+  // دوره‌ها و ورکشاپ‌ها
+  { path: "registrations/workshops", element: <WorkshopsList />, module: "courses" },
+  { path: "registrations/workshops/registrations", element: <WorkshopsRegistrations />, module: "courses" },
+  { path: "registrations/resumes", element: <ResumesList />, module: "courses" },
+
+  // محتوای وبسایت
+  { path: "site-content/pages", element: <PagesList />, module: "content" },
+  { path: "site-content/articles", element: <ArticlesList />, module: "content" },
+  { path: "site-content/news", element: <SiteNews />, module: "content" },
+  { path: "site-content/slider", element: <SiteSlider />, module: "content" },
+  { path: "site-content/:type/:id", element: <ContentForm />, module: "content", edit: true },
+
+  // فاکتور و پرداخت
+  { path: "finance", element: <InvoicesList />, module: "invoices" },
+  { path: "finance/new", element: <InvoiceForm />, module: "invoices", edit: true },
+
+  // گزارش‌ها
+  { path: "reports", element: <ReportTechnicians />, module: "reports" },
+  { path: "reports/faults", element: <ReportFaults />, module: "reports" },
+  { path: "reports/activity", element: <ActivityLog />, module: "activity" },
 
   // تنظیمات
-  { path: "settings", element: <SettingsGeneral />, perm: "write" },
-  { path: "settings/access", element: <SettingsAccess />, perm: "manageUsers" },
-  { path: "settings/profile", element: <SettingsProfile /> },
+  { path: "settings", element: <SettingsGeneral />, module: "settings" },
+  { path: "settings/notifications", element: <NotificationsSettings />, module: "notifications" },
+  { path: "settings/profile", element: <SettingsProfile />, module: "profile" },
 ];
 
 const implementedPaths = new Set(STATIC_ROUTES.map((r) => r.path));
@@ -127,9 +158,9 @@ for (const item of MENU_ITEMS) {
     moduleRoutes.push({
       path: p,
       element: (
-        <RequirePermission permission={leaf.perm || item.perm}>
+        <RequireModule module={leaf.module ?? item.module}>
           <ModulePage itemKey={leaf.key} />
-        </RequirePermission>
+        </RequireModule>
       ),
     });
   }
@@ -151,7 +182,7 @@ const Routers = createBrowserRouter([
           { path: "", element: <DashboardRoute /> },
           ...STATIC_ROUTES.map((r) => ({
             path: r.path,
-            element: <RequirePermission permission={r.perm}>{r.element}</RequirePermission>,
+            element: <RequireModule module={r.module} edit={r.edit}>{r.element}</RequireModule>,
           })),
           ...moduleRoutes,
         ],

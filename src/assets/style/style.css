@@ -3395,3 +3395,188 @@ a {
     width: auto;
   }
 }
+
+
+/* =========================================================
+   ۱۴) پنجره‌ها و فیلدهای فرم‌های کاربردی
+   ========================================================= */
+.modalback {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(16, 18, 22, 0.55);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  animation: fadein 0.18s var(--ease);
+}
+
+.modal {
+  width: 100%;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-pop);
+  animation: modalin 0.22s var(--ease);
+}
+
+.modal-sm {
+  max-width: 420px;
+}
+
+.modal-md {
+  max-width: 540px;
+}
+
+.modal-lg {
+  max-width: 700px;
+}
+
+.modalhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modalhead h2 {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.modalform {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 24px 20px;
+}
+
+.modalfoot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.confirmtext {
+  color: var(--text-soft);
+  text-wrap: pretty;
+}
+
+.btndanger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--danger);
+  color: #fff;
+  font-weight: 800;
+  transition: filter 0.2s var(--ease), transform 0.15s var(--ease);
+}
+
+.btndanger:hover {
+  filter: brightness(0.93);
+}
+
+.btndanger:active {
+  transform: scale(0.98);
+}
+
+.fieldbox[data-invalid] {
+  border-color: var(--danger);
+}
+
+.fieldreq {
+  color: var(--danger);
+}
+
+.fielderror {
+  color: var(--bad-fg);
+  font-size: 13px;
+}
+
+.fieldhint {
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.fieldsuffix {
+  flex: none;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.fieldbox input:disabled,
+.fieldbox select:disabled,
+.fieldbox textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes modalin {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+@media (max-width: 640px) {
+  .modalback {
+    align-items: end;
+    padding: 0;
+  }
+
+  .modal {
+    max-height: 92vh;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+  }
+}
+
+
+/* =========================================================
+   ۱۵) متفرقه‌ی کارکردی
+   ========================================================= */
+.formerror-inline {
+  margin: 20px 28px 0;
+}
+
+.hintline {
+  margin-top: 14px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.detailactions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.notice-warn {
+  margin-top: 14px;
+  background: var(--gold-bg);
+  color: var(--gold-fg);
+}
+
+.panelactions .btnprimary,
+.panelactions .btnsecondary {
+  height: 38px;
+  padding: 0 16px;
+  font-size: 13.5px;
+}

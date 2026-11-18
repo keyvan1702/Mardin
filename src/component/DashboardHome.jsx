@@ -8,7 +8,9 @@ import PageHeader from "./ui/PageHeader";
 import Panel from "./ui/Panel";
 import Badge from "./table/Badge";
 import usePermissions from "../hooks/usePermissions";
-import { MOCK_MISSIONS, MOCK_QR, PRIORITY } from "../services/mockData";
+import { useStore } from "../services/store";
+import { PRIORITY } from "../services/constants";
+import { dashboardStats, requestSeries } from "../services/stats";
 import { warrantyInfo } from "../utils/warranty";
 import { todayFa, toFaDigits, tofa } from "../utils/format";
 
@@ -22,16 +24,23 @@ const STAT_CARDS = [
 
 const RANK = { urgent: 0, high: 1, normal: 2, low: 3 };
 
-const DashboardHome = ({ stats, siteStats, range, chartLoading, error, onRangeChange, onRetry }) => {
+const DashboardHome = ({ range, error, onRangeChange, onRetry }) => {
   const { access, edit } = usePermissions();
+  // همه‌ی آمار از داده‌ی زنده‌ی پنل محاسبه می‌شود؛ با هر تغییر خودکار به‌روز می‌شود
+  const missions = useStore((s) => s.missions);
+  const customers = useStore((s) => s.customers);
+  const installers = useStore((s) => s.installers);
+  const qrs = useStore((s) => s.qr);
+  const stats = dashboardStats({ missions, customers, installers });
+  const siteStats = requestSeries(missions, range);
 
   // درخواست‌هایی که هنوز تکنسین ندارند یا رد شده‌اند
-  const attention = MOCK_MISSIONS.filter((m) => m.status === "pending" || m.status === "rejected")
+  const attention = missions.filter((m) => !m.installerId && m.stage !== "closed" && m.status !== "cancelled")
     .sort((a, b) => RANK[a.priority] - RANK[b.priority])
     .slice(0, 4);
 
   // گارانتی‌هایی که در ۳۰ روز آینده تمام می‌شوند
-  const expiring = MOCK_QR.map((q) => ({ ...q, w: warrantyInfo(q.installedAt, q.warrantyMonths) }))
+  const expiring = qrs.map((q) => ({ ...q, w: warrantyInfo(q.installedAt, q.warrantyMonths) }))
     .filter((q) => q.active && q.w.status === "expiring")
     .sort((a, b) => a.w.days - b.w.days)
     .slice(0, 4);
@@ -51,18 +60,18 @@ const DashboardHome = ({ stats, siteStats, range, chartLoading, error, onRangeCh
 
       <section className="statgrid" aria-label="شمارنده‌ها">
         {STAT_CARDS.map((c) => (
-          <StatCard key={c.key} icon={c.icon} label={c.label} tone={c.tone} value={stats ? stats[c.key] : null} />
+          <StatCard key={c.key} icon={c.icon} label={c.label} tone={c.tone} value={stats[c.key]} />
         ))}
       </section>
 
-      <SiteStatsChart data={siteStats} range={range} loading={chartLoading} onRangeChange={onRangeChange} />
+      <SiteStatsChart data={siteStats} range={range} loading={false} onRangeChange={onRangeChange} />
 
       {(access("missions") || access("warranty")) && (
         <div className="twocol">
           {access("missions") && (
             <Panel
               title="نیازمند اقدام"
-              hint="درخواست‌های بدون تکنسین یا ردشده"
+              hint="درخواست‌های بدون تکنسین؛ فوری‌ها اول"
               actions={
                 <Link to="/missions" className="textlink">
                   همه‌ی درخواست‌ها

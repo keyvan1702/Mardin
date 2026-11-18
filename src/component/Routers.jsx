@@ -13,6 +13,7 @@ import Login, { getStoredUser, clearUser } from "./Login";
 
 import CustomersList from "../pages/CustomersList";
 import CustomerForm from "../pages/CustomerForm";
+import MissionForm from "../pages/MissionForm";
 import StaffList from "../pages/StaffList";
 import StaffInstallers from "../pages/StaffInstallers";
 import RolesAccess from "../pages/RolesAccess";
@@ -94,6 +95,7 @@ const STATIC_ROUTES = [
   // مشتریان
   { path: "customers", element: <CustomersList />, module: "customers" },
   { path: "customers/new", element: <CustomerForm />, module: "customers", edit: true },
+  { path: "customers/:id", element: <CustomerForm />, module: "customers", edit: true },
 
   // کارکنان و نصابان
   { path: "staff", element: <StaffList />, module: "staff" },
@@ -102,6 +104,7 @@ const STATIC_ROUTES = [
 
   // درخواست‌های خدمات (تیکت)
   { path: "missions", element: <MissionsList />, module: "missions" },
+  { path: "missions/new", element: <MissionForm />, module: "missions", edit: true },
   { path: "missions/assign", element: <MissionsAssign />, module: "missions", edit: true },
   { path: "missions/history", element: <MissionsHistory />, module: "missions" },
   { path: "missions/:id", element: <MissionDetail />, module: "missions" },
@@ -131,6 +134,7 @@ const STATIC_ROUTES = [
   // فاکتور و پرداخت
   { path: "finance", element: <InvoicesList />, module: "invoices" },
   { path: "finance/new", element: <InvoiceForm />, module: "invoices", edit: true },
+  { path: "finance/:id", element: <InvoiceForm />, module: "invoices", edit: true },
 
   // گزارش‌ها
   { path: "reports", element: <ReportTechnicians />, module: "reports" },

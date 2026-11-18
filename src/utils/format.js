@@ -62,3 +62,23 @@ export const fmtDate = (isoDate) => {
   const d = new Date(s.length === 10 ? `${s}T12:00:00` : s);
   return Number.isNaN(d.getTime()) ? s : fullDate.format(d);
 };
+
+// «۲۳ آبان ۱۴۰۵، ۱۴:۳۰» از زمان ISO
+const dateTime = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+  year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit",
+});
+export const fmtDateTime = (isoDate) => {
+  if (!isoDate) return "—";
+  const d = new Date(isoDate);
+  return Number.isNaN(d.getTime()) ? String(isoDate) : dateTime.format(d);
+};
+
+// سال شمسی برای ساخت شماره‌های پیگیری (مثلاً 1405)
+export const jalaliYear = (d = new Date()) =>
+  new Intl.DateTimeFormat("en-US-u-ca-persian", { year: "numeric" })
+    .formatToParts(d)
+    .find((p) => p.type === "year")?.value ?? "1405";
+
+export const nowISO = () => new Date().toISOString();
+export const agoISO = (days = 0, hours = 0) =>
+  new Date(Date.now() - (days * 24 + hours) * 3600000).toISOString();

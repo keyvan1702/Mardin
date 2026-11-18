@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useStore } from "../services/store";
 import { getStoredUser } from "../component/Login";
 import { ROLE_LABELS, can, canAccess, canEdit, normalizeRole } from "../utils/permissions";
 
@@ -6,6 +7,7 @@ import { ROLE_LABELS, can, canAccess, canEdit, normalizeRole } from "../utils/pe
 export default function usePermissions() {
   const user = getStoredUser();
   const role = normalizeRole(user?.role);
+  const matrix = useStore((s) => s.access); // با تغییر ماتریس دسترسی دوباره محاسبه شود
   return useMemo(
     () => ({
       userId: user?.id ?? null,
@@ -16,6 +18,6 @@ export default function usePermissions() {
       access: (module) => canAccess(role, module), // آیا بخش را می‌بیند؟
       edit: (module) => canEdit(role, module), // آیا می‌تواند تغییر دهد؟
     }),
-    [user?.id, role],
+    [user?.id, role, matrix],
   );
 }

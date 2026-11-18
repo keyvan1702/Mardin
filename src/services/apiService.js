@@ -1,40 +1,42 @@
-import { MOCK_USERS, MOCK_STATS, buildSiteStats } from "./mockData";
+import { getState } from "./store";
+import { dashboardStats, requestSeries } from "./stats";
 
 /**
- * لایه‌ی سرویس. فعلاً همه‌چیز نمایشی است.
+ * لایه‌ی سرویس. فعلاً داده از حافظه‌ی مرورگر (services/store.js) می‌آید.
  *
  * برای وصل کردن API:
- *   ۱) axios را نصب کن و یک apiClient بساز (مثل پروژه‌ی Stockora: baseURL + اینترسپتور توکن + هندل ۴۰۱)
- *   ۲) بدنه‌ی هر تابع زیر را با یک درخواست واقعی عوض کن
- *   ۳) شکل خروجی توابع را نگه دار تا بقیه‌ی برنامه دست نخورد
+ *   ۱) axios را نصب کن و یک apiClient بساز (baseURL + توکن Bearer + هندل ۴۰۱)
+ *   ۲) بدنه‌ی توابع این فایل و services/actions.js را با درخواست واقعی عوض کن
+ *   ۳) شکل خروجی‌ها را نگه دار تا بقیه‌ی برنامه دست نخورد
  */
 
 export const AUTH_KEY = "mardin_auth";
 
-const delay = (ms = 450) => new Promise((resolve) => setTimeout(resolve, ms));
+const delay = (ms = 350) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const api = {
-  // ورود ← { token, user }
+  // ورود با نام کاربری و رمز کارکنان ← { token, user }
   async login({ username, password }) {
-    await delay(600);
-    const found = MOCK_USERS.find(
+    await delay(500);
+    const found = getState().staff.find(
       (u) => u.username === username.trim() && u.password === password,
     );
     if (!found) throw new Error("نام کاربری یا رمز عبور درست نیست.");
-    const { password: _omit, ...user } = found;
-    return { token: `mock-token-${user.id}`, user };
+    if (!found.active) throw new Error("این حساب غیرفعال است. با مدیر تماس بگیرید.");
+    return {
+      token: `mock-token-${found.id}`,
+      user: { id: found.id, name: found.name, role: found.roleKey, username: found.username },
+    };
   },
 
-  // شمارنده‌های بالای داشبورد ← { users, products, courses, services }
   async getDashboardStats() {
-    await delay();
-    return { ...MOCK_STATS };
+    await delay(200);
+    return dashboardStats(getState());
   },
 
-  // آمار کلی سایت ← [{ date: ISO, value: number }]
   async getSiteStats(days = 30) {
-    await delay(350);
-    return buildSiteStats(days);
+    await delay(150);
+    return requestSeries(getState().missions, days);
   },
 };
 

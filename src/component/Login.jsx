@@ -5,6 +5,7 @@ import Logo from "./Logo";
 import { useToast } from "./ToastContext";
 import useAsyncAction from "../hooks/useAsyncAction";
 import { api, apiErrorMessage, AUTH_KEY } from "../services/apiService";
+import { logActivity } from "../services/actions";
 
 /* ─────────── ذخیره‌ی نشست ─────────── */
 
@@ -54,6 +55,7 @@ const Login = () => {
       try {
         const session = await api.login({ username, password });
         saveUser(session, remember);
+        logActivity("auth", "ورود به پنل");
         toast.success(`خوش آمدید، ${session.user.name}`);
         navigate(location.state?.from?.pathname || "/", { replace: true });
       } catch (err) {

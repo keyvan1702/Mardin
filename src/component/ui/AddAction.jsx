@@ -4,7 +4,7 @@ import { LuPlus } from "react-icons/lu";
 import usePermissions from "../../hooks/usePermissions";
 
 // دکمه‌ی اصلی «افزودن …»؛ فقط برای نقش‌های دارای دسترسی «کامل» به آن بخش
-const AddAction = ({ module, to, children }) => {
+const AddAction = ({ module, to, onClick, children }) => {
   const { edit } = usePermissions();
   if (module && !edit(module)) return null;
   return to ? (
@@ -12,7 +12,7 @@ const AddAction = ({ module, to, children }) => {
       <LuPlus /> {children}
     </Link>
   ) : (
-    <button type="button" className="btnprimary">
+    <button type="button" className="btnprimary" onClick={onClick}>
       <LuPlus /> {children}
     </button>
   );

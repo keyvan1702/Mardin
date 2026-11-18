@@ -8,8 +8,9 @@ import { useTheme } from "./ThemeContext";
 import { useToast } from "./ToastContext";
 import { MENU_LEAVES } from "../utils/menu";
 import { ROLE_LABELS, canAccess, normalizeRole } from "../utils/permissions";
-import { initials, norm, tofa } from "../utils/format";
-import { MOCK_INBOX } from "../services/mockData";
+import { fmtDateTime, initials, norm, tofa } from "../utils/format";
+import { useCollection, useStore } from "../services/store";
+import { notifyApi } from "../services/actions";
 
 // بستن یک پنجره‌ی بازشو با کلیک بیرون یا Esc
 function useDismiss(open, setOpen, ref) {
@@ -36,7 +37,8 @@ const Topbar = ({ onMenuClick }) => {
   const [query, setQuery] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
-  const [inbox, setInbox] = useState(MOCK_INBOX); // اعلان‌های داخلی (فعلاً استاتیک)
+  const inbox = useCollection("inbox"); // اعلان‌های داخلی؛ با رویدادهای واقعی پنل پر می‌شود
+  useStore((s) => s.staff); // تغییر نام در پروفایل فوراً دیده شود
   const profileRef = useRef(null);
   const bellRef = useRef(null);
 
@@ -110,22 +112,22 @@ const Topbar = ({ onMenuClick }) => {
               <header className="popoverhead">
                 <strong>اعلان‌ها</strong>
                 {unread > 0 && (
-                  <button type="button" className="textlink" onClick={() => setInbox((l) => l.map((n) => ({ ...n, unread: false })))}>
+                  <button type="button" className="textlink" onClick={() => notifyApi.markAllRead()}>
                     همه را خوانده‌شده کن
                   </button>
                 )}
               </header>
               <ul className="notifylist">
-                {inbox.map((n) => (
+                {inbox.slice(0, 8).map((n) => (
                   <li key={n.id}>
                     <Link
                       to={n.to}
                       className={`notifyitem ${n.unread ? "notifyitem-unread" : ""}`}
-                      onClick={() => setBellOpen(false)}
+                      onClick={() => { notifyApi.markRead(n.id); setBellOpen(false); }}
                     >
                       <strong>{n.title}</strong>
                       <span>{n.text}</span>
-                      <em>{n.at}</em>
+                      <em>{fmtDateTime(n.at)}</em>
                     </Link>
                   </li>
                 ))}

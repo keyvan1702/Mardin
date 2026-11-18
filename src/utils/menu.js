@@ -36,6 +36,7 @@ export const MENU_ITEMS = [
     key: "missions", label: "درخواست‌های خدمات", icon: LuSend, path: "/missions", module: "missions", quick: true,
     children: [
       { key: "missions-active", label: "فهرست درخواست‌ها", path: "/missions", end: true, icon: LuClipboardList },
+      { key: "missions-new", label: "ثبت درخواست", path: "/missions/new", icon: LuFilePlus, needsEdit: true },
       { key: "missions-assign", label: "تخصیص به تکنسین", path: "/missions/assign", icon: LuUserRound, needsEdit: true },
       { key: "missions-history", label: "تاریخچه", path: "/missions/history", icon: LuHistory },
     ],

@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { LuLogOut, LuChevronDown } from "react-icons/lu";
 import Logo from "./Logo";
 import { getStoredUser, clearUser } from "./Login";
 import { useToast } from "./ToastContext";
 import { visibleMenu } from "../utils/menu";
+import { useStore } from "../services/store";
 import { normalizeRole } from "../utils/permissions";
 
 const Rightmenu = ({ open = false, onClose = () => {} }) => {
@@ -14,7 +15,8 @@ const Rightmenu = ({ open = false, onClose = () => {} }) => {
   const role = normalizeRole(getStoredUser()?.role);
 
   // منوی قابل‌نمایش بر اساس «بخش» و نقش (utils/permissions.js)
-  const visible = visibleMenu(role);
+  const matrix = useStore((s) => s.access);
+  const visible = useMemo(() => visibleMenu(role), [role, matrix]);
   const main = visible.filter((i) => !i.bottom);
   const bottom = visible.filter((i) => i.bottom);
 
